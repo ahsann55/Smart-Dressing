@@ -32,19 +32,25 @@ dependencies:
   cloud_firestore:
   firebase_auth:
   firebase_database:
-  flutter_facebook_login:
   http:
   google_sign_in:
   modal_progress_hud: ^0.1.3
   font_awesome_flutter: ^8.11.0
   carousel_pro: ^1.0.0
-  flutter_countdown_timer: ^1.6.0
-
+  countdown_flutter: ^0.1.2
+  flutter_facebook_auth: ^1.0.0
+  flutter_rating_bar: ^3.2.0+1
+  image_picker: ^0.6.7+22
+  firebase_storage: ^7.0.0
+  path_provider:
+  bubble:
+  intl:
+  flutter_dialogflow:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  integration_test:
-    sdk: flutter
+  #integration_test:
+    #sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

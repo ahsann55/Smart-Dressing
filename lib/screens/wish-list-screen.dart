@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:smart_dressing_user_app/screens/shopping-cart-screen.dart';
 import 'package:smart_dressing_user_app/utilities/constants.dart';
+import 'package:smart_dressing_user_app/widgets/wishlist-product-container.dart';
 
 class WishList extends StatefulWidget {
   static final String id = 'WishList';
@@ -10,494 +13,144 @@ class WishList extends StatefulWidget {
 }
 
 class _WishListState extends State<WishList> {
+  bool showSpinner = false;
+  final _fireStore = FirebaseFirestore.instance;
+  List<String> productManufacturer = [];
+  List<String> productCategory = [];
+  List<String> productGender = [];
+  List<String> productDetails = [];
+  List<String> productName = [];
+  List<String> productPhoto = [];
+  List<String> productPrice = [];
+  List<String> productQuantity = [];
+  List<String> productSize = [];
+  List<bool> productDiscountStatus = [];
+  List<String> productRating = [];
+  List<String> productId = [];
+  List<bool> isAddedToCart = [];
+  List<bool> isAddedToWishList = [];
+  List<WishListProductContainer> cartItems = [];
+  getCartItems() async {
+    setState(() {
+      showSpinner = true;
+    });
+    int loopCount = 0;
+    final productsReference = _fireStore.collection('products');
+    QuerySnapshot product = await productsReference
+        .where('isAddedToWishList', isEqualTo: true)
+        .get();
+    product.docs.forEach((element) {
+      productCategory.add(element['category']);
+      productGender.add(element['gender']);
+      productDetails.add(element['productDetails']);
+      productManufacturer.add(element['productManufacturer']);
+      productName.add(element['productName']);
+      productPhoto.add(element['productPhoto']);
+      productPrice.add(element['productPrice']);
+      productQuantity.add(element['productQuantity']);
+      productSize.add(element['productSize']);
+      productDiscountStatus.add(element['productDiscountStatus']);
+      productRating.add(element['productRating']);
+      productId.add(element['id']);
+      isAddedToCart.add(element['isAddedToCart']);
+      isAddedToWishList.add(element['isAddedToWishList']);
+      loopCount++;
+    });
+    if (product != null) {
+      setState(() {
+        for (int i = 0; i < loopCount; i++) {
+          cartItems.add(WishListProductContainer(
+            productPhoto: productPhoto[i],
+            productPrice: productPrice[i],
+            productName: productName[i],
+            productDetails: productDetails[i],
+            productDiscountStatus: productDiscountStatus[i],
+            productRating: productRating[i],
+            productSize: productSize[i],
+            productQuantity: productQuantity[i],
+            isAddedToCart: isAddedToCart[i],
+            isAddedToWishList: isAddedToWishList[i],
+            productId: productId[i],
+            productCategory: productCategory[i],
+            productGender: productGender[i],
+            productManufacturer: productManufacturer[i],
+          ));
+        }
+      });
+    }
+
+    setState(() {
+      showSpinner = false;
+    });
+  }
+
+  @override
+  void initState() {
+    setState(() {
+      getCartItems();
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            AppBar(
-              backgroundColor: Color(kBackgroundColor),
-              title: Text(
-                'Wishlist',
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, ShoppingCart.id);
-                    },
-                    child: Icon(
-                      FontAwesomeIcons.shoppingCart,
-                      color: Colors.white,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      child: Scaffold(
+        body: Material(
+          child: Column(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    AppBar(
+                      backgroundColor: Color(kBackgroundColor),
+                      title: Text(
+                        'Wishlist',
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, ShoppingCart.id);
+                            },
+                            child: Icon(
+                              FontAwesomeIcons.shoppingCart,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    Column(
+                      children: cartItems.isEmpty
+                          ? [
+                              SizedBox(
+                                height: 50,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(
+                                  'You have no items in cart',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ]
+                          : cartItems,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            Container(
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 30, horizontal: 15),
-                        child: Image(
-                          image: AssetImage('assets/images/product1.jpg'),
-                          fit: BoxFit.contain,
-                          height: 70,
-                        ),
-                      ),
-                      Container(
-                        width: 130,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 1',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 30),
-                        padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.grey,
-                                spreadRadius: 1.0,
-                                offset: Offset(3, 6),
-                                blurRadius: 2.0),
-                          ],
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.solidHeart,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Rs. 5000',
-                    style: TextStyle(color: Colors.black, fontSize: 22),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: MaterialButton(
-                      shape: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50))),
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width,
-                      onPressed: () {},
-                      color: Color(kBackgroundColor),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_shopping_cart,
-                            color: Colors.white,
-                          ),
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Text(
-                            'Add To Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 25,
-                    child: Divider(
-                      thickness: 1,
-                      height: 5,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
               ),
-            ),
-            Container(
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 30, horizontal: 15),
-                        child: Image(
-                          image: AssetImage('assets/images/product2.jpg'),
-                          fit: BoxFit.contain,
-                          height: 70,
-                        ),
-                      ),
-                      Container(
-                        width: 130,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 2',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 30),
-                        padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.grey,
-                                spreadRadius: 1.0,
-                                offset: Offset(3, 6),
-                                blurRadius: 2.0),
-                          ],
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.solidHeart,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Rs. 8000',
-                    style: TextStyle(color: Colors.black, fontSize: 22),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: MaterialButton(
-                      shape: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50))),
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width,
-                      onPressed: () {},
-                      color: Color(kBackgroundColor),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_shopping_cart,
-                            color: Colors.white,
-                          ),
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Text(
-                            'Add To Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 25,
-                    child: Divider(
-                      thickness: 1,
-                      height: 5,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 30, horizontal: 15),
-                        child: Image(
-                          image: AssetImage('assets/images/product1.jpg'),
-                          fit: BoxFit.contain,
-                          height: 70,
-                        ),
-                      ),
-                      Container(
-                        width: 130,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 3',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 30),
-                        padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.grey,
-                                spreadRadius: 1.0,
-                                offset: Offset(3, 6),
-                                blurRadius: 2.0),
-                          ],
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.solidHeart,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Rs. 5000',
-                    style: TextStyle(color: Colors.black, fontSize: 22),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: MaterialButton(
-                      shape: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50))),
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width,
-                      onPressed: () {},
-                      color: Color(kBackgroundColor),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_shopping_cart,
-                            color: Colors.white,
-                          ),
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Text(
-                            'Add To Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 25,
-                    child: Divider(
-                      thickness: 1,
-                      height: 5,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 30, horizontal: 15),
-                        child: Image(
-                          image: AssetImage('assets/images/product2.jpg'),
-                          fit: BoxFit.contain,
-                          height: 70,
-                        ),
-                      ),
-                      Container(
-                        width: 130,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 4',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 30),
-                        padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.grey,
-                                spreadRadius: 1.0,
-                                offset: Offset(3, 6),
-                                blurRadius: 2.0),
-                          ],
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.solidHeart,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Rs. 8000',
-                    style: TextStyle(color: Colors.black, fontSize: 22),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: MaterialButton(
-                      shape: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50))),
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width,
-                      onPressed: () {},
-                      color: Color(kBackgroundColor),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_shopping_cart,
-                            color: Colors.white,
-                          ),
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Text(
-                            'Add To Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 25,
-                    child: Divider(
-                      thickness: 1,
-                      height: 5,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

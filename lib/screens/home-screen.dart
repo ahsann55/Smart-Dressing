@@ -1,62 +1,89 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:core';
 import 'package:flutter/material.dart';
-import 'package:flutter_countdown_timer/countdown.dart';
-import 'package:flutter_countdown_timer/countdown_controller.dart';
-import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:smart_dressing_user_app/screens/login-screen.dart';
+import 'package:smart_dressing_user_app/screens/stitched-products-screen.dart';
 import 'package:smart_dressing_user_app/screens/shopping-cart-screen.dart';
+import 'package:smart_dressing_user_app/screens/un-stitched-products-screen.dart';
 import 'package:smart_dressing_user_app/screens/wish-list-screen.dart';
 import 'package:smart_dressing_user_app/utilities/constants.dart';
-import 'package:smart_dressing_user_app/widgets/SideDrawerCustomListTile.dart';
 import 'package:smart_dressing_user_app/widgets/custom-carousel-pro.dart';
 import 'package:smart_dressing_user_app/widgets/custom-side-drawer.dart';
-
-import 'login-screen.dart';
-
-FirebaseUser loggedInUser;
+import 'package:smart_dressing_user_app/widgets/productDisplayContainer.dart';
+import 'package:countdown_flutter/countdown_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   static final String id = 'HomeScreen';
-
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _auth = FirebaseAuth.instance;
   String searchProduct;
   bool isSearchSelected = false;
   bool isProfileUploaded = false;
-  CountdownController countdownController = CountdownController(
-    duration: Duration(
-      hours: 2,
-      minutes: 59,
-      seconds: 59,
-    ),
-  );
-  void getCurrentUser() async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        loggedInUser = user;
-        print(user.email);
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
   getSearchProduct(value) {
     searchProduct = value;
   }
 
-  @override
-  void initState() {
-    getCurrentUser();
-    super.initState();
-    setState(() {
-      countdownController.start();
-    });
+  List<Widget> getPopularProducts(int start, int end) {
+    List<String> productName = [];
+
+    List<String> productRating = [];
+
+    List<String> productDetails = [];
+
+    List<String> imageUrl = [];
+
+    List<bool> productDiscountStatus = [];
+
+    List<String> productPrice = [];
+
+    List<String> productQuantity = [];
+
+    List<String> productSize = [];
+
+    List<String> productId = [];
+
+    int containerNumber;
+
+    List<String> productCategory = [];
+
+    List<String> productGender = [];
+
+    List<ProductDisplayContainer> popularProducts = [];
+    for (int i = start; i <= end; i++) {
+      productId.add(LogInScreen.productId[i]);
+      productSize.add(LogInScreen.productSize[i]);
+      productQuantity.add(LogInScreen.productQuantity[i]);
+      productPrice.add(LogInScreen.productPrice[i]);
+      productDiscountStatus.add(LogInScreen.productDiscountStatus[i]);
+      imageUrl.add(LogInScreen.productPhoto[i]);
+      productDetails.add(LogInScreen.productDetails[i]);
+      containerNumber = i;
+      productRating.add(LogInScreen.productRating[i]);
+      productName.add(LogInScreen.productName[i]);
+      productCategory.add(LogInScreen.productCategory[i]);
+      productGender.add(LogInScreen.productGender[i]);
+
+      popularProducts.add(ProductDisplayContainer(
+        image: imageUrl,
+        price: productPrice,
+        name: productName,
+        details: productDetails,
+        productDiscountStatus: productDiscountStatus,
+        productRating: productRating,
+        productSize: productSize,
+        productQuantity: productQuantity,
+        isAddedToCart: LogInScreen.isAddedToCart[i],
+        isAddedToWishList: LogInScreen.isAddedToWishList[i],
+        productId: productId,
+        containerNumber: containerNumber,
+        productCategory: productCategory,
+        productGender: productGender,
+      ));
+    }
+    return popularProducts;
   }
 
   @override
@@ -93,13 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 )
-              : Text(
-                  'Smart Dressing',
-                  style: TextStyle(color: Colors.white),
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'Smart Dressing',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
           actions: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Container(
                 width: 120,
                 child: Row(
@@ -149,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        drawer: MySideDrawer(),
+        drawer: CustomSideDrawer(),
         body: Material(
           child: SingleChildScrollView(
             child: Column(
@@ -185,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Container(
                         height: 210,
-                        width: 190,
+                        width: 180,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           boxShadow: [
@@ -197,28 +227,34 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            Image(
-                              image: AssetImage('assets/images/stitched.jpg'),
-                              fit: BoxFit.contain,
-                            ),
-                            SizedBox(
-                              height: 40,
-                            ),
-                            Text(
-                              'Stitched',
-                              style: TextStyle(
-                                color: Color(kBackgroundColor),
-                                fontSize: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                                context, StitchedProductsScreen.id);
+                          },
+                          child: Column(
+                            children: [
+                              Image(
+                                image: AssetImage('assets/images/stitched.jpg'),
+                                fit: BoxFit.contain,
                               ),
-                            ),
-                          ],
+                              SizedBox(
+                                height: 40,
+                              ),
+                              Text(
+                                'Stitched',
+                                style: TextStyle(
+                                  color: Color(kBackgroundColor),
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Container(
                         height: 210,
-                        width: 190,
+                        width: 180,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           boxShadow: [
@@ -230,24 +266,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            Image(
-                              image: AssetImage('assets/images/unstitched.jpg'),
-                              fit: BoxFit.contain,
-                              height: 130,
-                            ),
-                            SizedBox(
-                              height: 40,
-                            ),
-                            Text(
-                              'Unstitched',
-                              style: TextStyle(
-                                color: Color(kBackgroundColor),
-                                fontSize: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                                context, UnStitchedProductsScreen.id);
+                          },
+                          child: Column(
+                            children: [
+                              Image(
+                                image:
+                                    AssetImage('assets/images/unstitched.jpg'),
+                                fit: BoxFit.contain,
+                                height: 130,
                               ),
-                            ),
-                          ],
+                              SizedBox(
+                                height: 40,
+                              ),
+                              Text(
+                                'Unstitched',
+                                style: TextStyle(
+                                  color: Color(kBackgroundColor),
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -268,224 +311,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product1.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 1',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 5000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product2.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 2',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 8000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product1.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 3',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 5000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product2.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 4',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 8000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    children: getPopularProducts(0, 2),
                   ),
                 ),
                 SizedBox(
-                  height: 50,
+                  height: 20,
                 ),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -537,149 +367,28 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               Row(
                                 children: [
-                                  Text(
-                                    '${countdownController.currentRemainingTime.hours}',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 27),
-                                  ),
-                                  Text(
-                                    ' : ',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 27),
-                                  ),
-                                  Text(
-                                    '${countdownController.currentRemainingTime.min}',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 27),
-                                  ),
-                                  Text(
-                                    ' : ',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 27),
-                                  ),
-                                  Text(
-                                    '${countdownController.currentRemainingTime.sec}',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 27),
-                                  ),
+                                  CountdownFormatted(
+                                      duration: Duration(hours: 6),
+                                      builder: (BuildContext context,
+                                          String remaining) {
+                                        return Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 15),
+                                          child: Text(
+                                            remaining,
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 25),
+                                          ),
+                                        );
+                                      }),
                                 ],
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.symmetric(horizontal: 10),
-                          height: 350,
-                          color: Colors.white,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 15),
-                                child: Image(
-                                  image:
-                                      AssetImage('assets/images/product1.jpg'),
-                                  fit: BoxFit.contain,
-                                  height: 100,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'ProductName 1',
-                                  style: TextStyle(
-                                      color: Color(kBackgroundColor),
-                                      fontSize: 21),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'Rs. 5000',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'Product Details: ',
-                                  style: TextStyle(
-                                      color: Color(kBackgroundColor),
-                                      fontSize: 18),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          color: Colors.white,
-                          margin: EdgeInsets.symmetric(horizontal: 10),
-                          height: 350,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 15),
-                                child: Image(
-                                  image:
-                                      AssetImage('assets/images/product2.jpg'),
-                                  fit: BoxFit.contain,
-                                  height: 100,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'ProductName 2',
-                                  style: TextStyle(
-                                      color: Color(kBackgroundColor),
-                                      fontSize: 21),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'Rs. 8000',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 15,
-                                ),
-                                child: Text(
-                                  'Product Details: ',
-                                  style: TextStyle(
-                                      color: Color(kBackgroundColor),
-                                      fontSize: 18),
-                                ),
-                              ),
-                            ],
-                          ),
+                        Row(
+                          children: getPopularProducts(0, 2),
                         ),
                       ],
                     ),
@@ -700,220 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product1.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 1',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 5000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product2.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 2',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 8000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product1.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 3',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 5000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Image(
-                                image: AssetImage('assets/images/product2.jpg'),
-                                fit: BoxFit.contain,
-                                height: 100,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'ProductName 4',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 21),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Rs. 8000',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 15,
-                              ),
-                              child: Text(
-                                'Product Details: ',
-                                style: TextStyle(
-                                    color: Color(kBackgroundColor),
-                                    fontSize: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    children: getPopularProducts(0, 2),
                   ),
                 ),
               ],

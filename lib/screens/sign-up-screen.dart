@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -15,11 +16,21 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _auth = FirebaseAuth.instance;
+  final _fireStore = FirebaseFirestore.instance;
   String fullName;
   String email;
   String password;
   String confirmPassword;
   bool showSpinner = false;
+  String phoneNumber;
+  getCurrentDate() {
+    var now = new DateTime.now();
+    String data = now.toString();
+    List<String> dateTime = data.split(' ');
+    String date = dateTime[0];
+    return date;
+  }
+
   getFullName(value) {
     fullName = value;
   }
@@ -34,6 +45,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   getConfirmPassword(value) {
     confirmPassword = value;
+  }
+
+  getPhoneNumber(value) {
+    phoneNumber = value;
   }
 
   @override
@@ -53,7 +68,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
             child: Container(
               height: MediaQuery.of(context).size.height,
-              decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+              decoration: BoxDecoration(
+                color: Color(kBackgroundColor).withOpacity(0.7),
+              ),
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -149,7 +166,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -198,10 +215,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
+                                onChanged: getPhoneNumber,
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 18),
                                 decoration: InputDecoration(
@@ -246,7 +264,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -296,7 +314,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -337,19 +355,80 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               email: email,
                               password: password,
                             );
-
                             if (newUser != null) {
+                              String id = _auth.currentUser.uid;
+                              await _fireStore.collection('users').doc(id).set({
+                                'joinDate': getCurrentDate(),
+                                'id': id,
+                                'address': 'Enter your address',
+                                'firstAndLastName': fullName,
+                                'email': email,
+                                'isBuyer': true,
+                                'phoneNumber': phoneNumber,
+                                'profilePicture': 'Add Image',
+                                'backgroundPicture': 'Edit Background Image'
+                              });
                               setState(() {
                                 showSpinner = false;
                               });
+                              print('Executed till this line');
                               showDialog(
                                 context: context,
-                                child: AlertDialog(
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    backgroundColor: Colors.white,
+                                    title: Column(
+                                      children: [
+                                        Text(
+                                          'Successfully Registered!',
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        MaterialButton(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(7.0))),
+                                          minWidth: 90,
+                                          height: 40,
+                                          color: Color(kBackgroundColor),
+                                          onPressed: () {
+                                            Navigator.pushReplacementNamed(
+                                                context, LogInScreen.id);
+                                          },
+                                          elevation: 10,
+                                          child: Text(
+                                            'Login',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    elevation: 10,
+                                  );
+                                },
+                              );
+                            }
+                          } catch (e) {
+                            List<String> error = e.toString().split(']');
+                            int length = error.length;
+                            setState(() {
+                              showSpinner = false;
+                            });
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
                                   backgroundColor: Colors.white,
                                   title: Column(
                                     children: [
                                       Text(
-                                        'Successfully Registered!',
+                                        '${length == 1 ? error[1].replaceAll('String', 'Details').replaceAll('or null', '').replaceAll('is', 'are') : e}!',
                                         style: TextStyle(
                                             color: Colors.black, fontSize: 16),
                                       ),
@@ -364,12 +443,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                         height: 40,
                                         color: Color(kBackgroundColor),
                                         onPressed: () {
-                                          Navigator.pushReplacementNamed(
-                                              context, LogInScreen.id);
+                                          Navigator.of(context).pop();
                                         },
                                         elevation: 10,
                                         child: Text(
-                                          'Login',
+                                          'Try Again',
                                           style: TextStyle(
                                               color: Colors.white,
                                               fontSize: 16),
@@ -378,21 +456,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     ],
                                   ),
                                   elevation: 10,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            showDialog(
-                              context: context,
-                              child: AlertDialog(
+                                );
+                              },
+                            );
+                          }
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
                                 backgroundColor: Colors.white,
                                 title: Column(
                                   children: [
                                     Text(
-                                      'Sorry Invalid Email or Password !\n\nNote: Password cannot be less than 6 characters',
+                                      'Password do not match!',
                                       style: TextStyle(
                                           color: Colors.black, fontSize: 16),
                                     ),
@@ -419,45 +496,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ],
                                 ),
                                 elevation: 10,
-                              ),
-                            );
-                          }
-                        } else {
-                          showDialog(
-                            context: context,
-                            child: AlertDialog(
-                              backgroundColor: Colors.white,
-                              title: Column(
-                                children: [
-                                  Text(
-                                    'Password do not match!',
-                                    style: TextStyle(
-                                        color: Colors.black, fontSize: 16),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  MaterialButton(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(7.0))),
-                                    minWidth: 90,
-                                    height: 40,
-                                    color: Color(kBackgroundColor),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    elevation: 10,
-                                    child: Text(
-                                      'Try Again',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              elevation: 10,
-                            ),
+                              );
+                            },
                           );
                         }
                       },
@@ -472,9 +512,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: Text(
                         'Submit',
                         style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200),
+                          color: Colors.black,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ),

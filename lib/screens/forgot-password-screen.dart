@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:smart_dressing_user_app/screens/sign-up-screen.dart';
+import 'package:smart_dressing_user_app/utilities/constants.dart';
 
 class ForgotPassword extends StatefulWidget {
   static final String id = 'ForgotPassword';
@@ -11,6 +13,7 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
+  final _auth = FirebaseAuth.instance;
   bool showSpinner = false;
   String email;
   onChangeEmail(value) {
@@ -34,7 +37,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
             child: Container(
               height: MediaQuery.of(context).size.height,
-              decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+              decoration: BoxDecoration(
+                color: Color(kBackgroundColor).withOpacity(0.7),
+              ),
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +86,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -115,7 +120,15 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 15),
                     child: MaterialButton(
-                      onPressed: () async {},
+                      onPressed: () async {
+                        setState(() {
+                          showSpinner = true;
+                        });
+                        await _auth.sendPasswordResetEmail(email: email);
+                        setState(() {
+                          showSpinner = true;
+                        });
+                      },
                       color: Colors.white,
                       height: 55,
                       minWidth: MediaQuery.of(context).size.width - 40,
@@ -127,9 +140,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       child: Text(
                         'Continue',
                         style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200),
+                          color: Colors.black,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -148,8 +161,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushReplacementNamed(
-                                context, SignUpScreen.id);
+                            Navigator.pushNamed(context, SignUpScreen.id);
                           },
                           child: Text(
                             'Signup Now ',

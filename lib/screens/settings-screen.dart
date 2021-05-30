@@ -13,7 +13,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: MySideDrawer(),
+      drawer: CustomSideDrawer(),
       appBar: AppBar(
         backgroundColor: Color(kBackgroundColor),
         title: Text(

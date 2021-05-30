@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:smart_dressing_user_app/screens/login-screen.dart';
 import 'package:smart_dressing_user_app/utilities/constants.dart';
 
-import 'home-screen.dart';
-
 class MySplashScreen extends StatefulWidget {
   static final String id = 'MySplashScreen';
   @override
@@ -14,6 +12,7 @@ class MySplashScreen extends StatefulWidget {
 }
 
 class _MySplashScreenState extends State<MySplashScreen> {
+  getProducts() async {}
   @override
   void initState() {
     super.initState();

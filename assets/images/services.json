@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "jaxxapp-1c76d",
+  "private_key_id": "3a8baf3dba0df77d032c0e760b609dfed18f929b",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCTfVv+WyS397PF\nytdnUaO+pVDeu6YM29vLVU1tM1vCgaRBJsKwKoYj/oe7r0kmJQEQix8GSWW+Gjfg\nJoZOHAwytAYvViEOoZ7elRbLbGq45+UbvuyEr5zpFhpkEdctjKLlvSxM02yc+/rS\nx3XrWbyiOgz5PmJATayjzhNkmgua5IXlhMgnLG0S9kqA32gOCbIzGPYkEgLBv5ek\nm8wLvzu0PoKbg5ehE5rDr7GdS23EpnTcFvKwdv0bR8d6e5mwQpTZUeA9svgKHzqP\n0AwN0jzgwS9fyfIdzKqt+0rQehUbSQtCN5O8PDhybV+vV44INzAdnYDXE13XlZGZ\ntpwHXrI7AgMBAAECggEADEHaT9i2Q/23eIQjg6giwhjOEDyrD52D9jGIJj+i7BbH\nFk0I2Agorrwb/qqSGzPvEzdkpCqcZICcTSoWdk5ZaytP6kYvqB4hbGEajFxdwDEx\ndq1Wza4kjbBzEAb1iYkLDqm6kUXu3FsKnNLLx3vlM9w8MMiQ9MQfyVs6fF1bAovE\nCbnrwnxtgQidEGzR9MPjBinDLb3CoJVO3J9J0v8oT9hX7Hby9aSAZqXLY8uBTwG7\neYbbm+PDuBc7xW/0rj7Hls44TZ7GN5AbQiJds7da1Y+3hd9a8/G0bLaja1nDU3uA\nmo43my1ORmt+Nhr3WcmcbsNLXGKM4O2Ixht8uUaOdQKBgQDLn862rU+3VzhuQb+W\ndsyTIDktYKcS/HHvZWOmlnjB3llxIOtFlSyO3q5/hMSSUwHeBw/gx6wn8rc+TJUE\ndWbkqErg2vl/KR/3HuM4EMR2NvXnc0jXmM+42GZRj5Ii6QAM8C5dvKZgiw1sRSrh\nV2TizLWTJRs5ZItdUPmZcZ8oxwKBgQC5bTgIAmVk4/5v+WC2IyBFiwXjJ7lp6hwG\nZYT5hU3XQNGMro/7KGNRx86MbkO7h08pqAHGmXUwTazokCwwNjTuOyRSeGmfT6xV\n7OOHfN/4NT+hz+6y0UobDzpMnP/Kp9jLRdjidMRg1eCRRMCGBOM2boHJMG8kBwIi\nQIAmS2x+7QKBgCF/J4U7m3qAmaLho/+/iUXGrkE9vh5Mcv27wxnbdQAHcNVAYhOv\nR4Y1MaV+lMuxZgQ9SypiDnr/3Y8dEAKMwaFp4e99dj+p5z1C0oQdlgQQZIFvoJL+\n62TwDFzsblDZ3Y1DUY1QBFqrZUjjU/t/4fPBUzliiEj3tklikbzhSRpvAoGACzie\n0W1DsY1Skngm8B7EDzFQk+SNhelS9Ngj6e21Pjd/9uGBeROCnypWR41MsAaKNd0i\n7l/PBbNNqW1AH1LIdTpDAnKjAa8SoMiLJGHcM+sVBLfOnCeqMmUDhCtkF2F87yA0\n9c9XKv0GcAQXGoUlMuARHpm9wBJkgKoily6tTCkCgYBs/AuNEyLhQkbpeF1ESZtd\ncIVhr/Oqof55jeNIEvH+RnJpJZZp70wiaTjmmbxamjRU/RjOL2ll9shQ1XLDmCxP\n5HyNmeUhYSQ5HoBVvFm7xdA8bjYmio5pe+gkVeqhuxd9XIwm4dmzdVBl13z65nc8\nipgZwyvqI1N1mPbSD7yQLg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "smartdressing-301@jaxxapp-1c76d.iam.gserviceaccount.com",
+  "client_id": "116806815914931807634",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smartdressing-301%40jaxxapp-1c76d.iam.gserviceaccount.com"
+}

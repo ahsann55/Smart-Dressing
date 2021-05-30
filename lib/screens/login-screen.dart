@@ -1,36 +1,57 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:smart_dressing_user_app/screens/forgot-password-screen.dart';
 import 'package:smart_dressing_user_app/screens/home-screen.dart';
 import 'package:smart_dressing_user_app/screens/sign-up-screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:smart_dressing_user_app/screens/vendor-home-screen.dart';
 import 'package:smart_dressing_user_app/utilities/constants.dart';
-import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' show jsonDecode;
-
-GoogleSignIn _googleSignIn = GoogleSignIn(
-  scopes: <String>[
-    'email',
-    'https://www.googleapis.com/auth/contacts.readonly',
-  ],
-);
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LogInScreen extends StatefulWidget {
   static final String id = 'LogInScreen';
-
+  static String userName;
+  static String userEmail;
+  static String userAddress;
+  static String userBackgroundPicture;
+  static String userId;
+  static bool userIsBuyer;
+  static String userJoinDate;
+  static String userPhoneNumber;
+  static String userProfilePicture;
+  static List<String> productCategory = [];
+  static List<String> productGender = [];
+  static List<String> productDetails = [];
+  static List<String> productManufacturer = [];
+  static List<String> productName = [];
+  static List<String> productPhoto = [];
+  static List<String> productPrice = [];
+  static List<String> productQuantity = [];
+  static List<String> productSize = [];
+  static List<bool> productDiscountStatus = [];
+  static List<String> productRating = [];
+  static List<String> productId = [];
+  static List<bool> isAddedToCart = [];
+  static List<bool> isAddedToWishList = [];
+  static int subTotal = 0;
   @override
   _LogInScreenState createState() => _LogInScreenState();
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-  GoogleSignInAccount _currentUser;
-  String _contactText;
+  final _fireStore = FirebaseFirestore.instance;
+  getCurrentDate() {
+    var now = new DateTime.now();
+    String data = now.toString();
+    List<String> dateTime = data.split(' ');
+    String date = dateTime[0];
+    return date;
+  }
+
   final googleAuth = GoogleSignIn();
-  final fbLogin = FacebookLogin();
   final _auth = FirebaseAuth.instance;
   String email;
   String password;
@@ -41,66 +62,6 @@ class _LogInScreenState extends State<LogInScreen> {
 
   onChangedPassword(value) {
     password = value;
-  }
-
-  Future<void> _handleGetContact() async {
-    setState(() {
-      _contactText = "Loading contact info...";
-    });
-    final http.Response response = await http.get(
-      'https://people.googleapis.com/v1/people/me/connections'
-      '?requestMask.includeField=person.names',
-      headers: await _currentUser.authHeaders,
-    );
-    if (response.statusCode != 200) {
-      setState(() {
-        _contactText = "People API gave a ${response.statusCode} "
-            "response. Check logs for details.";
-      });
-      print('People API ${response.statusCode} response: ${response.body}');
-      return;
-    }
-    final Map<String, dynamic> data = jsonDecode(response.body);
-    final String namedContact = _pickFirstNamedContact(data);
-    setState(() {
-      if (namedContact != null) {
-        _contactText = "I see you know $namedContact!";
-      } else {
-        _contactText = "No contacts to display.";
-      }
-    });
-  }
-
-  String _pickFirstNamedContact(Map<String, dynamic> data) {
-    final List<dynamic> connections = data['connections'];
-    final Map<String, dynamic> contact = connections?.firstWhere(
-      (dynamic contact) => contact['names'] != null,
-      orElse: () => null,
-    );
-    if (contact != null) {
-      final Map<String, dynamic> name = contact['names'].firstWhere(
-        (dynamic name) => name['displayName'] != null,
-        orElse: () => null,
-      );
-      if (name != null) {
-        return name['displayName'];
-      }
-    }
-    return null;
-  }
-
-  @override
-  void initState() {
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
-      setState(() {
-        _currentUser = account;
-      });
-      if (_currentUser != null) {
-        _handleGetContact();
-      }
-    });
-    _googleSignIn.signInSilently();
-    super.initState();
   }
 
   @override
@@ -120,7 +81,9 @@ class _LogInScreenState extends State<LogInScreen> {
             filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
             child: Container(
               height: MediaQuery.of(context).size.height,
-              decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+              decoration: BoxDecoration(
+                color: Color(kBackgroundColor).withOpacity(0.7),
+              ),
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +130,7 @@ class _LogInScreenState extends State<LogInScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -218,7 +181,7 @@ class _LogInScreenState extends State<LogInScreen> {
                           Container(
                             padding: EdgeInsets.only(top: 15),
                             height: 50,
-                            width: 290,
+                            width: 245,
                             child: Material(
                               color: Colors.transparent,
                               child: TextField(
@@ -276,21 +239,128 @@ class _LogInScreenState extends State<LogInScreen> {
                             showSpinner = true;
                           });
                           final user = await _auth.signInWithEmailAndPassword(
-                              email: email, password: password);
+                            email: email,
+                            password: password,
+                          );
+
                           if (user != null) {
+                            try {
+                              final user = _auth.currentUser;
+                              if (user != null) {
+                                final collectionReference =
+                                    _fireStore.collection('users');
+                                QuerySnapshot users = await collectionReference
+                                    .where('id', isEqualTo: user.uid)
+                                    .get();
+                                users.docs.forEach((element) {
+                                  LogInScreen.userName =
+                                      element['firstAndLastName'];
+                                  LogInScreen.userAddress = element['address'];
+                                  LogInScreen.userBackgroundPicture =
+                                      element['backgroundPicture'];
+                                  LogInScreen.userEmail = element['email'];
+                                  LogInScreen.userId = element['id'];
+                                  LogInScreen.userIsBuyer = element['isBuyer'];
+                                  LogInScreen.userJoinDate =
+                                      element['joinDate'];
+                                  LogInScreen.userPhoneNumber =
+                                      element['phoneNumber'];
+                                  LogInScreen.userProfilePicture =
+                                      element['profilePicture'];
+                                });
+                                final productsReference =
+                                    _fireStore.collection('products');
+                                QuerySnapshot product =
+                                    await productsReference.get();
+                                product.docs.forEach((element) {
+                                  LogInScreen.productCategory
+                                      .add(element['category']);
+                                  LogInScreen.productGender
+                                      .add(element['gender']);
+                                  LogInScreen.productDetails
+                                      .add(element['productDetails']);
+                                  LogInScreen.productManufacturer
+                                      .add(element['productManufacturer']);
+                                  LogInScreen.productName
+                                      .add(element['productName']);
+                                  LogInScreen.productPhoto
+                                      .add(element['productPhoto']);
+                                  LogInScreen.productPrice
+                                      .add(element['productPrice']);
+                                  LogInScreen.productQuantity
+                                      .add(element['productQuantity']);
+                                  LogInScreen.productSize
+                                      .add(element['productSize']);
+                                  LogInScreen.productDiscountStatus
+                                      .add(element['productDiscountStatus']);
+                                  LogInScreen.productRating
+                                      .add(element['productRating']);
+                                  LogInScreen.productId.add(element['id']);
+                                  LogInScreen.isAddedToCart
+                                      .add(element['isAddedToCart']);
+                                  LogInScreen.isAddedToWishList
+                                      .add(element['isAddedToWishList']);
+                                  LogInScreen.subTotal = element['subTotal'];
+                                });
+                              }
+                            } catch (e) {
+                              print(e);
+                            }
                             setState(() {
                               showSpinner = false;
                             });
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HomeScreen(),
-                              ),
-                            );
+                            if (LogInScreen.userIsBuyer == true) {
+                              Navigator.pushReplacementNamed(
+                                  context, HomeScreen.id);
+                            } else {
+                              Navigator.pushReplacementNamed(
+                                  context, VendorHomeScreen.id);
+                            }
                           }
                         } catch (e) {
                           setState(() {
                             showSpinner = false;
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.white,
+                                  title: Column(
+                                    children: [
+                                      Text(
+                                        'Failed to authenticate!',
+                                        style: TextStyle(
+                                            color: Colors.black, fontSize: 16),
+                                      ),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      MaterialButton(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(7.0)),
+                                        ),
+                                        minWidth: 90,
+                                        height: 40,
+                                        color: Color(kBackgroundColor),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        elevation: 10,
+                                        child: Text(
+                                          'Try Again',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w300),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  elevation: 10,
+                                );
+                              },
+                            );
                           });
                         }
                       },
@@ -305,9 +375,9 @@ class _LogInScreenState extends State<LogInScreen> {
                       child: Text(
                         'Submit',
                         style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200),
+                          color: Colors.black,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -336,23 +406,111 @@ class _LogInScreenState extends State<LogInScreen> {
                           GestureDetector(
                             onTap: () async {
                               try {
-                                final result = await googleAuth.signIn();
-                                result.authentication.then((value) {
-                                  _auth
-                                      .signInWithCustomToken(value.accessToken)
-                                      .then((value) {
-                                    Navigator.of(context)
-                                        .pushReplacementNamed(HomeScreen.id);
-                                  });
-                                }).catchError((e) {
-                                  showDialog(
-                                    context: context,
-                                    child: AlertDialog(
+                                final GoogleSignInAccount googleUser =
+                                    await GoogleSignIn().signIn();
+                                final GoogleSignInAuthentication googleAuth =
+                                    await googleUser.authentication;
+                                final GoogleAuthCredential credential =
+                                    GoogleAuthProvider.credential(
+                                  accessToken: googleAuth.accessToken,
+                                  idToken: googleAuth.idToken,
+                                );
+                                _auth.signInWithCredential(credential);
+                                String id = _auth.currentUser.uid;
+                                setState(() {
+                                  showSpinner = true;
+                                });
+                                await _fireStore
+                                    .collection('users')
+                                    .doc(id)
+                                    .set({
+                                  'joinDate': getCurrentDate(),
+                                  'id': id,
+                                  'address': 'Enter your address',
+                                  'firstAndLastName':
+                                      _auth.currentUser.displayName,
+                                  'email': _auth.currentUser.email,
+                                  'isBuyer': true,
+                                  'phoneNumber': 'Enter your phone number',
+                                  'profilePicture': 'Add Image',
+                                  'backgroundPicture': 'Edit Background Image'
+                                });
+                                final collectionReference =
+                                    _fireStore.collection('users');
+                                QuerySnapshot users = await collectionReference
+                                    .where('id', isEqualTo: id)
+                                    .get();
+                                users.docs.forEach((element) {
+                                  LogInScreen.userName =
+                                      element['firstAndLastName'];
+                                  LogInScreen.userAddress = element['address'];
+                                  LogInScreen.userBackgroundPicture =
+                                      element['backgroundPicture'];
+                                  LogInScreen.userEmail = element['email'];
+                                  LogInScreen.userId = element['id'];
+                                  LogInScreen.userIsBuyer = element['isBuyer'];
+                                  LogInScreen.userJoinDate =
+                                      element['joinDate'];
+                                  LogInScreen.userPhoneNumber =
+                                      element['phoneNumber'];
+                                  LogInScreen.userProfilePicture =
+                                      element['profilePicture'];
+                                });
+                                final productsReference =
+                                    _fireStore.collection('products');
+                                QuerySnapshot product =
+                                    await productsReference.get();
+                                product.docs.forEach((element) {
+                                  LogInScreen.productCategory
+                                      .add(element['category']);
+                                  LogInScreen.productGender
+                                      .add(element['gender']);
+                                  LogInScreen.productDetails
+                                      .add(element['productDetails']);
+                                  LogInScreen.productManufacturer
+                                      .add(element['productManufacturer']);
+                                  LogInScreen.productName
+                                      .add(element['productName']);
+                                  LogInScreen.productPhoto
+                                      .add(element['productPhoto']);
+                                  LogInScreen.productPrice
+                                      .add(element['productPrice']);
+                                  LogInScreen.productQuantity
+                                      .add(element['productQuantity']);
+                                  LogInScreen.productSize
+                                      .add(element['productSize']);
+                                  LogInScreen.productDiscountStatus
+                                      .add(element['productDiscountStatus']);
+                                  LogInScreen.productRating
+                                      .add(element['productRating']);
+                                  LogInScreen.productId.add(element['id']);
+                                  LogInScreen.isAddedToCart
+                                      .add(element['isAddedToCart']);
+                                  LogInScreen.isAddedToWishList
+                                      .add(element['isAddedToWishList']);
+                                  LogInScreen.subTotal = element['subTotal'];
+                                });
+                                setState(() {
+                                  showSpinner = false;
+                                });
+
+                                if (LogInScreen.userIsBuyer == true) {
+                                  Navigator.pushReplacementNamed(
+                                      context, HomeScreen.id);
+                                } else {
+                                  Navigator.pushReplacementNamed(
+                                      context, VendorHomeScreen.id);
+                                }
+                              } catch (e) {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
                                       backgroundColor: Colors.white,
                                       title: Column(
                                         children: [
                                           Text(
-                                            'Failed to authenticate!',
+                                            'Error! Please try again.',
                                             style: TextStyle(
                                                 color: Colors.black,
                                                 fontSize: 16),
@@ -382,48 +540,8 @@ class _LogInScreenState extends State<LogInScreen> {
                                         ],
                                       ),
                                       elevation: 10,
-                                    ),
-                                  );
-                                });
-                              } catch (e) {
-                                showDialog(
-                                  context: context,
-                                  child: AlertDialog(
-                                    backgroundColor: Colors.white,
-                                    title: Column(
-                                      children: [
-                                        Text(
-                                          'Failed to authenticate!',
-                                          style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 16),
-                                        ),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
-                                        MaterialButton(
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(7.0))),
-                                          minWidth: 90,
-                                          height: 40,
-                                          color: Color(kBackgroundColor),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          elevation: 10,
-                                          child: Text(
-                                            'Try Again',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w300),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    elevation: 10,
-                                  ),
+                                    );
+                                  },
                                 );
                               }
                             },
@@ -434,102 +552,163 @@ class _LogInScreenState extends State<LogInScreen> {
                           ),
                           GestureDetector(
                             onTap: () async {
-                              final result = await fbLogin
-                                  .logIn(['email', 'public_profile']);
-                              switch (result.status) {
-                                case FacebookLoginStatus.loggedIn:
-                                  final token = result.accessToken.token;
-                                  final graphResponse = await http.get(
-                                      'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email&access_token=$token');
-                                  final profile =
-                                      jsonDecode(graphResponse.body);
-                                  _auth.signInWithCustomToken(token);
-                                  Navigator.pushReplacementNamed(
-                                      context, HomeScreen.id);
-                                  break;
-                                case FacebookLoginStatus.cancelledByUser:
+                              try {
+                                final result =
+                                    await FacebookAuth.instance.login();
+                                final FacebookAuthCredential
+                                    facebookAuthCredential =
+                                    FacebookAuthProvider.credential(
+                                        result.token);
+
+                                _auth
+                                    .signInWithCredential(
+                                        facebookAuthCredential)
+                                    .then((value) async {
+                                  String id = _auth.currentUser.uid;
+                                  setState(() {
+                                    showSpinner = true;
+                                  });
+                                  bool authenticated = false;
+                                  while (!authenticated) {
+                                    await _fireStore
+                                        .collection('users')
+                                        .doc(id)
+                                        .set({
+                                      'joinDate': getCurrentDate(),
+                                      'id': id,
+                                      'address': 'Enter your address',
+                                      'firstAndLastName':
+                                          _auth.currentUser.displayName,
+                                      'email': _auth.currentUser.email,
+                                      'isBuyer': true,
+                                      'phoneNumber': 'Enter your phone number',
+                                      'profilePicture': 'Add Image',
+                                      'backgroundPicture':
+                                          'Edit Background Image'
+                                    });
+                                    authenticated = true;
+                                  }
+                                  final collectionReference =
+                                      _fireStore.collection('users');
+                                  QuerySnapshot users =
+                                      await collectionReference
+                                          .where('id', isEqualTo: id)
+                                          .get();
+                                  users.docs.forEach((element) {
+                                    LogInScreen.userName =
+                                        element['firstAndLastName'];
+                                    LogInScreen.userAddress =
+                                        element['address'];
+                                    LogInScreen.userBackgroundPicture =
+                                        element['backgroundPicture'];
+                                    LogInScreen.userEmail = element['email'];
+                                    LogInScreen.userId = element['id'];
+                                    LogInScreen.userIsBuyer =
+                                        element['isBuyer'];
+                                    LogInScreen.userJoinDate =
+                                        element['joinDate'];
+                                    LogInScreen.userPhoneNumber =
+                                        element['phoneNumber'];
+                                    LogInScreen.userProfilePicture =
+                                        element['profilePicture'];
+                                  });
+                                  final productsReference =
+                                      _fireStore.collection('products');
+
+                                  QuerySnapshot product =
+                                      await productsReference.get();
+                                  product.docs.forEach((element) {
+                                    LogInScreen.productCategory
+                                        .add(element['category']);
+                                    LogInScreen.productGender
+                                        .add(element['gender']);
+                                    LogInScreen.productDetails
+                                        .add(element['productDetails']);
+                                    LogInScreen.productManufacturer
+                                        .add(element['productManufacturer']);
+                                    LogInScreen.productName
+                                        .add(element['productName']);
+                                    LogInScreen.productPhoto
+                                        .add(element['productPhoto']);
+                                    LogInScreen.productPrice
+                                        .add(element['productPrice']);
+                                    LogInScreen.productQuantity
+                                        .add(element['productQuantity']);
+                                    LogInScreen.productSize
+                                        .add(element['productSize']);
+                                    LogInScreen.productDiscountStatus
+                                        .add(element['productDiscountStatus']);
+                                    LogInScreen.productRating
+                                        .add(element['productRating']);
+                                    LogInScreen.productId.add(element['id']);
+                                    LogInScreen.isAddedToCart
+                                        .add(element['isAddedToCart']);
+                                    LogInScreen.isAddedToWishList
+                                        .add(element['isAddedToWishList']);
+                                    LogInScreen.subTotal = element['subTotal'];
+                                  });
+                                  setState(() {
+                                    showSpinner = false;
+                                  });
+                                  if (LogInScreen.userIsBuyer == true) {
+                                    Navigator.pushReplacementNamed(
+                                        context, HomeScreen.id);
+                                  } else {
+                                    Navigator.pushReplacementNamed(
+                                        context, VendorHomeScreen.id);
+                                  }
+                                }).catchError((e) {
+                                  if (e.toString().contains(
+                                      '[firebase_auth/account-exists-with-different-credential]')) {}
                                   showDialog(
                                     context: context,
-                                    child: AlertDialog(
-                                      backgroundColor: Colors.white,
-                                      title: Column(
-                                        children: [
-                                          Text(
-                                            'Failed to authenticate!',
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 16),
-                                          ),
-                                          SizedBox(
-                                            height: 10,
-                                          ),
-                                          MaterialButton(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(7.0))),
-                                            minWidth: 90,
-                                            height: 40,
-                                            color: Color(kBackgroundColor),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            elevation: 10,
-                                            child: Text(
-                                              'Try Again',
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        backgroundColor: Colors.white,
+                                        title: Column(
+                                          children: [
+                                            Text(
+                                              e.toString().contains(
+                                                      '[firebase_auth/account-exists-with-different-credential]')
+                                                  ? 'Account already exists with same email address'
+                                                  : 'Failed to authenticate!',
                                               style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w300),
+                                                  color: Colors.black,
+                                                  fontSize: 16),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      elevation: 10,
-                                    ),
-                                  );
-                                  break;
-                                case FacebookLoginStatus.error:
-                                  showDialog(
-                                    context: context,
-                                    child: AlertDialog(
-                                      backgroundColor: Colors.white,
-                                      title: Column(
-                                        children: [
-                                          Text(
-                                            'Network Error!',
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 16),
-                                          ),
-                                          SizedBox(
-                                            height: 10,
-                                          ),
-                                          MaterialButton(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(7.0))),
-                                            minWidth: 90,
-                                            height: 40,
-                                            color: Color(kBackgroundColor),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            elevation: 10,
-                                            child: Text(
-                                              'Try Again',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w300),
+                                            SizedBox(
+                                              height: 10,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      elevation: 10,
-                                    ),
+                                            MaterialButton(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              7.0))),
+                                              minWidth: 90,
+                                              height: 40,
+                                              color: Color(kBackgroundColor),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              elevation: 10,
+                                              child: Text(
+                                                'Try Again',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16,
+                                                    fontWeight:
+                                                        FontWeight.w300),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        elevation: 10,
+                                      );
+                                    },
                                   );
-                                  break;
-                              }
+                                });
+                              } catch (e) {}
                             },
                             child: Image.asset(
                               'assets/images/facebook-logo.png',
@@ -559,8 +738,7 @@ class _LogInScreenState extends State<LogInScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushReplacementNamed(
-                                context, SignUpScreen.id);
+                            Navigator.pushNamed(context, SignUpScreen.id);
                           },
                           child: Text(
                             'Register now ',
